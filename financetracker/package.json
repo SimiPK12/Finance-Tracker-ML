@@ -1,0 +1,43 @@
+{
+  "name": "@financetracker/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "axios": "^1.7.9",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.3",
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.0",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@nx/js": "22.6.4",
+    "@nx/next": "22.6.4",
+    "@nx/workspace": "22.6.4",
+    "@swc-node/register": "~1.11.1",
+    "@swc/cli": "~0.5.0",
+    "@swc/core": "~1.15.8",
+    "@swc/helpers": "~0.5.15",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "10.4.20",
+    "nx": "22.6.4",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.17",
+    "tslib": "^2.8.1",
+    "typescript": "~5.7.3"
+  },
+  "workspaces": [
+    "apps/*"
+  ]
+}
