@@ -2,6 +2,12 @@
   "name": "@financetracker/web",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "vercel-build": "next build"
+  },
   "dependencies": {
     "next": "~16.1.6",
     "react": "^19.0.0",
