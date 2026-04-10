@@ -1,10 +1,10 @@
-'use client';
+﻿'use client';
 
 export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Plus, Sparkles, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Sparkles, Loader2, Trash2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '../../lib/utils';
 import { supabase, type Transaction } from '../../lib/supabase';
@@ -28,30 +28,19 @@ export default function TransactionsPage() {
   const fetchTransactions = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      window.location.href = '/login';
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .order('date', { ascending: false });
-
+    if (!user) { window.location.href = '/login'; return; }
+    const { data, error } = await supabase.from('transactions').select('*').order('date', { ascending: false });
     if (error) setError(error.message);
     else setTransactions(data || []);
     setLoading(false);
   };
 
-  // Auto-categorize via ML API
   const handleDescriptionBlur = async () => {
     if (!description.trim() || type === 'income') return;
     setLoadingCategory(true);
     try {
       const mlUrl = process.env.NEXT_PUBLIC_ML_API_URL || 'http://127.0.0.1:8000';
-      const response = await axios.post(`${mlUrl}/predict`, {
-        description: description
-      });
+      const response = await axios.post(${""}/predict, { description });
       setCategory(response.data.category);
     } catch {
       setCategory('Others');
@@ -65,30 +54,16 @@ export default function TransactionsPage() {
     if (!description || !amount) return;
     setSaving(true);
     setError('');
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = '/login'; return; }
-
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert({
-        user_id: user.id,
-        description,
-        amount: parseFloat(amount),
-        type,
-        category: type === 'income' ? 'Income' : (category || 'Others'),
-        date,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      setError(error.message);
-    } else if (data) {
+    const { data, error } = await supabase.from('transactions').insert({
+      user_id: user.id, description, amount: parseFloat(amount), type,
+      category: type === 'income' ? 'Income' : (category || 'Others'), date,
+    }).select().single();
+    if (error) { setError(error.message); }
+    else if (data) {
       setTransactions([data, ...transactions]);
-      setDescription('');
-      setAmount('');
-      setCategory('');
+      setDescription(''); setAmount(''); setCategory('');
       setDate(new Date().toISOString().split('T')[0]);
     }
     setSaving(false);
@@ -99,9 +74,10 @@ export default function TransactionsPage() {
     setTransactions(transactions.filter(t => t.id !== id));
   };
 
+  const isIncome = type === 'income';
+
   return (
     <div className="min-h-screen p-8 text-slate-100 selection:bg-purple-500/30">
-
       <div className="mb-10 flex items-center gap-4 animate-fade-in">
         <Link href="/" className="p-2 glass-panel rounded-full hover:bg-slate-800 transition-colors">
           <ArrowLeft size={20} className="text-slate-300" />
@@ -112,94 +88,79 @@ export default function TransactionsPage() {
       </div>
 
       {error && (
-        <div className="mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-sm text-rose-400">
-          {error}
-        </div>
+        <div className="mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-sm text-rose-400">{error}</div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Form Panel */}
         <div className="lg:col-span-1">
           <div className="glass-panel p-6 rounded-2xl animate-fade-in sticky top-8">
             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Plus className="text-purple-400" />
-              New Transaction
+              {isIncome ? <Briefcase className="text-emerald-400" /> : <Plus className="text-purple-400" />}
+              {isIncome ? 'Record Income' : 'New Expense'}
             </h2>
 
             <form onSubmit={handleAddTransaction} className="space-y-4">
-
               <div className="flex p-1 bg-slate-900/50 rounded-lg overflow-hidden">
-                <button type="button" onClick={() => setType('expense')} className={cn("flex-1 py-2 text-sm font-medium rounded-md transition-all", type === 'expense' ? "bg-rose-500/20 text-rose-400" : "text-slate-400 hover:text-white")}>Expense</button>
-                <button type="button" onClick={() => setType('income')} className={cn("flex-1 py-2 text-sm font-medium rounded-md transition-all", type === 'income' ? "bg-emerald-500/20 text-emerald-400" : "text-slate-400 hover:text-white")}>Income</button>
+                <button type="button" onClick={() => { setType('expense'); setCategory(''); }} className={cn("flex-1 py-2 text-sm font-medium rounded-md transition-all", !isIncome ? "bg-rose-500/20 text-rose-400" : "text-slate-400 hover:text-white")}>Expense</button>
+                <button type="button" onClick={() => { setType('income'); setCategory(''); }} className={cn("flex-1 py-2 text-sm font-medium rounded-md transition-all", isIncome ? "bg-emerald-500/20 text-emerald-400" : "text-slate-400 hover:text-white")}>Income</button>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  {isIncome ? 'Source of Income' : 'Description'}
+                </label>
                 <input
-                  type="text"
-                  required
-                  value={description}
+                  type="text" required value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  onBlur={handleDescriptionBlur}
-                  placeholder="e.g., Grocery shopping"
+                  onBlur={isIncome ? undefined : handleDescriptionBlur}
+                  placeholder={isIncome ? 'e.g., Salary, Freelance, Investment returns' : 'e.g., Grocery shopping'}
                   className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-slate-200 placeholder-slate-600"
                 />
-                {loadingCategory && (
+                {!isIncome && loadingCategory && (
                   <div className="flex items-center gap-2 mt-2 text-xs text-purple-400">
                     <Loader2 size={12} className="animate-spin" /> Using AI to detect category...
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className={isIncome ? '' : 'grid grid-cols-2 gap-4'}>
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Amount ($)</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Amount (₹)</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
+                    type="number" step="0.01" required value={amount}
+                    onChange={(e) => setAmount(e.target.value)} placeholder="0.00"
                     className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-slate-200 placeholder-slate-600"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Category</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      placeholder="Auto-filled"
-                      className="w-full bg-slate-900/50 border border-purple-500/30 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-purple-200"
-                      readOnly={type === 'income'}
-                    />
-                    {type === 'expense' && category && !loadingCategory && (
-                      <Sparkles size={14} className="absolute right-3 top-3 text-purple-400" />
-                    )}
+                {!isIncome && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Category</label>
+                    <div className="relative">
+                      <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Auto-filled"
+                        className="w-full bg-slate-900/50 border border-purple-500/30 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-purple-200" />
+                      {category && !loadingCategory && (
+                        <Sparkles size={14} className="absolute right-3 top-3 text-purple-400" />
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Date</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-slate-200 [color-scheme:dark]"
-                />
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-slate-200 [color-scheme:dark]" />
               </div>
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 disabled:opacity-60 text-white font-semibold py-3 rounded-xl shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all mt-4 flex items-center justify-center gap-2"
-              >
+              <button type="submit" disabled={saving}
+                className={cn("w-full font-semibold py-3 rounded-xl shadow-lg transition-all mt-4 flex items-center justify-center gap-2 text-white",
+                  isIncome ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                           : "bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 shadow-[0_0_20px_rgba(147,51,234,0.3)]",
+                  saving && "opacity-60"
+                )}>
                 {saving ? <Loader2 size={16} className="animate-spin" /> : null}
-                {saving ? 'Saving...' : 'Save Transaction'}
+                {saving ? 'Saving...' : isIncome ? 'Save Income' : 'Save Expense'}
               </button>
             </form>
           </div>
@@ -212,12 +173,9 @@ export default function TransactionsPage() {
               <h2 className="text-xl font-semibold">Recent Transactions</h2>
               <span className="text-xs text-slate-400">{transactions.length} total</span>
             </div>
-
             <div className="divide-y divide-slate-800/50">
               {loading ? (
-                <div className="p-12 flex justify-center">
-                  <Loader2 size={32} className="animate-spin text-purple-400" />
-                </div>
+                <div className="p-12 flex justify-center"><Loader2 size={32} className="animate-spin text-purple-400" /></div>
               ) : transactions.length === 0 ? (
                 <div className="p-8 text-center text-slate-500 italic">No transactions yet. Add some!</div>
               ) : transactions.map((t) => (
@@ -231,32 +189,26 @@ export default function TransactionsPage() {
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-slate-400">{t.date}</span>
                         <span className="w-1 h-1 rounded-full bg-slate-600" />
-                        <span className="text-xs px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                          {t.category}
-                        </span>
+                        <span className={cn("text-xs px-2 py-0.5 rounded-md border",
+                          t.type === 'income' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        )}>{t.category}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className={cn("font-bold", t.type === 'income' ? "text-emerald-400" : "text-slate-200")}>
-                      {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                      {t.type === 'income' ? '+' : '-'}₹{t.amount.toFixed(2)}
                     </span>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-rose-500/20 rounded-lg text-rose-400"
-                    >
+                    <button onClick={() => handleDelete(t.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-rose-500/20 rounded-lg text-rose-400">
                       <Trash2 size={16} />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
