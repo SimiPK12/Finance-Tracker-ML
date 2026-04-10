@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Plus, Sparkles, Loader2, Trash2 } from 'lucide-react';
