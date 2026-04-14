@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +40,7 @@ export default function TransactionsPage() {
     setLoadingCategory(true);
     try {
       const mlUrl = process.env.NEXT_PUBLIC_ML_API_URL || 'http://127.0.0.1:8000';
-      const response = await axios.post(${""}/predict, { description });
+      const response = await axios.post(`${mlUrl}/predict`, { description });
       setCategory(response.data.category);
     } catch {
       setCategory('Others');
