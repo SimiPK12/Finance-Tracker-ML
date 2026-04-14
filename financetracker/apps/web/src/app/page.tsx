@@ -102,18 +102,23 @@ export default function Dashboard() {
     const now = new Date();
 
     if (savingsView === 'weekly') {
-      // Show each day of the current week (Mon–Sun)
-      const startOfWeek = new Date(now);
-      const day = now.getDay(); // 0=Sun
-      startOfWeek.setDate(now.getDate() - ((day + 6) % 7)); // Monday
-      return Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(startOfWeek);
-        d.setDate(startOfWeek.getDate() + i);
-        const dateStr = d.toISOString().split('T')[0];
-        const dayTxs = transactions.filter(t => t.date === dateStr);
-        const inc = dayTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-        const exp = dayTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-        return { name: DAY_NAMES[d.getDay()], savings: Math.round((inc - exp) * 100) / 100 };
+      // Show Week 1 to Week 5 of the current month based on 7-day chunks
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const numWeeks = Math.ceil(daysInMonth / 7);
+      
+      return Array.from({ length: numWeeks }, (_, i) => {
+        const weekNum = i + 1;
+        const weekTxs = transactions.filter(t => {
+          const td = new Date(t.date);
+          if (td.getFullYear() !== currentYear || td.getMonth() !== currentMonth) return false;
+          const txWeek = Math.ceil(td.getDate() / 7);
+          return txWeek === weekNum;
+        });
+        const inc = weekTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+        const exp = weekTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+        return { name: `Week ${weekNum}`, savings: Math.round((inc - exp) * 100) / 100 };
       });
     }
 

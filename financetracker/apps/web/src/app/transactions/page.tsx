@@ -38,12 +38,23 @@ export default function TransactionsPage() {
   const handleDescriptionBlur = async () => {
     if (!description.trim() || type === 'income') return;
     setLoadingCategory(true);
+    
+    // Quick client-side fallback logic if the ML API is not deployed yet
+    const descLower = description.toLowerCase();
+    let fallbackCategory = 'Others';
+    if (descLower.includes('food') || descLower.includes('swiggy') || descLower.includes('zomato') || descLower.includes('grocery') || descLower.includes('vegetable')) fallbackCategory = 'Food';
+    else if (descLower.includes('petrol') || descLower.includes('uber') || descLower.includes('transport') || descLower.includes('bus') || descLower.includes('train')) fallbackCategory = 'Transport';
+    else if (descLower.includes('movie') || descLower.includes('ticket') || descLower.includes('netflix') || descLower.includes('entertainment')) fallbackCategory = 'Entertainment';
+    else if (descLower.includes('medicine') || descLower.includes('health') || descLower.includes('doctor') || descLower.includes('pharmacy')) fallbackCategory = 'Health';
+    else if (descLower.includes('bill') || descLower.includes('electricity') || descLower.includes('water')) fallbackCategory = 'Bills';
+    else if (descLower.includes('shopping') || descLower.includes('clothes') || descLower.includes('amazon') || descLower.includes('flipkart')) fallbackCategory = 'Shopping';
+
     try {
       const mlUrl = process.env.NEXT_PUBLIC_ML_API_URL || 'http://127.0.0.1:8000';
       const response = await axios.post(`${mlUrl}/predict`, { description });
       setCategory(response.data.category);
     } catch {
-      setCategory('Others');
+      setCategory(fallbackCategory);
     } finally {
       setLoadingCategory(false);
     }
