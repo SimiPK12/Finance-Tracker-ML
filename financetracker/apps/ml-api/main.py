@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from model import ExpenseCategorizer
@@ -26,7 +26,7 @@ async def startup_event():
         print(f"Warning: Could not train model on startup: {e}")
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 VALID_CATEGORIES = ["Food", "Transport", "Education", "Health", "Entertainment", "Shopping", "Bills", "Travel", "Others"]
 

@@ -97,7 +97,7 @@ export default function Dashboard() {
     });
   }, [transactions]);
 
-  // ── Savings chart data (view-aware) ───────────────────────────────────────
+  // ── Expenditure chart data (view-aware) ───────────────────────────────────
   const savingsData = useMemo(() => {
     const now = new Date();
 
@@ -116,9 +116,8 @@ export default function Dashboard() {
           const txWeek = Math.ceil(td.getDate() / 7);
           return txWeek === weekNum;
         });
-        const inc = weekTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
         const exp = weekTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-        return { name: `Week ${weekNum}`, savings: Math.round((inc - exp) * 100) / 100 };
+        return { name: `Week ${weekNum}`, value: Math.round(exp * 100) / 100 };
       });
     }
 
@@ -130,9 +129,8 @@ export default function Dashboard() {
           const td = new Date(t.date);
           return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth();
         });
-        const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
         const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-        return { name: MONTH_NAMES[d.getMonth()], savings: Math.round((inc - exp) * 100) / 100 };
+        return { name: MONTH_NAMES[d.getMonth()], value: Math.round(exp * 100) / 100 };
       });
     }
 
@@ -143,9 +141,8 @@ export default function Dashboard() {
         const td = new Date(t.date);
         return td.getFullYear() === now.getFullYear() && td.getMonth() === i;
       });
-      const inc = mTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
       const exp = mTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      return { name: MONTH_NAMES[i], savings: Math.round((inc - exp) * 100) / 100 };
+      return { name: MONTH_NAMES[i], value: Math.round(exp * 100) / 100 };
     });
   }, [transactions, savingsView]);
 
@@ -318,7 +315,7 @@ export default function Dashboard() {
       <div className="glass-panel rounded-2xl p-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
-            <BarChart2 className="text-emerald-400" size={20} /> Savings Overview
+            <BarChart2 className="text-sky-400" size={20} /> Expenditure Overview
           </h3>
           {/* Toggle */}
           <div className="flex p-1 bg-slate-900/60 rounded-xl overflow-hidden">
@@ -345,15 +342,15 @@ export default function Dashboard() {
               <YAxis stroke="#94a3b8" tick={{ fill: '#f1f5f9', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v}`} width={70} />
               <Tooltip content={<SavingsTooltip />} />
               <Bar
-                dataKey="savings"
-                name="Savings"
+                dataKey="value"
+                name="Expenditure"
                 radius={[6, 6, 0, 0]}
                 maxBarSize={48}
               >
                 {savingsData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.savings >= 0 ? '#10b981' : '#f43f5e'}
+                    fill="#0ea5e9"
                     fillOpacity={0.85}
                   />
                 ))}
@@ -362,7 +359,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
         <p className="text-xs text-slate-500 mt-2 text-center">
-          Green = Positive Savings &nbsp;·&nbsp; Red = Deficit (Expenses &gt; Income)
+          Displaying total expenditure for the selected period
         </p>
       </div>
 

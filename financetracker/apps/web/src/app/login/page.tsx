@@ -2,9 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { Wallet, Sparkles, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Wallet, Sparkles, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +15,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Check for errors in the URL (e.g. from Supabase auth redirects)
+    const errorDesc = searchParams.get('error_description') || searchParams.get('error');
+    if (errorDesc) {
+      setError(errorDesc.replace(/\+/g, ' '));
+    }
+
+    // Check for confirmation success markers in the hash or query
+    const hash = window.location.hash;
+    if (hash.includes('access_token') || hash.includes('type=signup') || searchParams.get('type') === 'signup') {
+      setMessage('Email confirmed successfully! You can now sign in with your credentials.');
+      // Clean up the URL hash/params
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+  }, [searchParams]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +137,8 @@ export default function LoginPage() {
             </div>
           )}
           {message && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-emerald-400">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-emerald-400 flex items-center gap-3">
+              <CheckCircle2 size={18} className="flex-shrink-0" />
               {message}
             </div>
           )}

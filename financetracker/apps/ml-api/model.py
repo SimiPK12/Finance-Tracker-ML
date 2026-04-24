@@ -12,7 +12,7 @@ VALID_CATEGORIES = [
 ]
 
 # Confidence threshold: below this → "Others"
-CONFIDENCE_THRESHOLD = 0.35
+CONFIDENCE_THRESHOLD = 0.20
 
 class ExpenseCategorizer:
     def __init__(self, data_path='dataset.csv'):

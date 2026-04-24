@@ -42,17 +42,26 @@ export default function TransactionsPage() {
     // Quick client-side fallback logic if the ML API is not deployed yet
     const descLower = description.toLowerCase();
     let fallbackCategory = 'Others';
-    if (descLower.includes('food') || descLower.includes('swiggy') || descLower.includes('zomato') || descLower.includes('grocery') || descLower.includes('vegetable')) fallbackCategory = 'Food';
-    else if (descLower.includes('petrol') || descLower.includes('uber') || descLower.includes('transport') || descLower.includes('bus') || descLower.includes('train')) fallbackCategory = 'Transport';
-    else if (descLower.includes('movie') || descLower.includes('ticket') || descLower.includes('netflix') || descLower.includes('entertainment')) fallbackCategory = 'Entertainment';
-    else if (descLower.includes('medicine') || descLower.includes('health') || descLower.includes('doctor') || descLower.includes('pharmacy')) fallbackCategory = 'Health';
-    else if (descLower.includes('bill') || descLower.includes('electricity') || descLower.includes('water')) fallbackCategory = 'Bills';
-    else if (descLower.includes('shopping') || descLower.includes('clothes') || descLower.includes('amazon') || descLower.includes('flipkart')) fallbackCategory = 'Shopping';
+    if (descLower.match(/food|swiggy|zomato|grocery|vegetable|dinner|lunch|breakfast|restaurant|fruit|snack|pizza|burger|kfc|starbucks|bakery|chai|sandwich|milk|rice/)) fallbackCategory = 'Food';
+    else if (descLower.match(/petrol|uber|transport|bus|train|taxi|ola|rapido|fuel|metro|toll|parking|vehicle|bike|car|auto rickshaw|ferry/)) fallbackCategory = 'Transport';
+    else if (descLower.match(/movie|ticket|netflix|entertainment|concert|gaming|game|spotify|theme park|museum|bowling|amusement|gaming|video game|live show|escape room/)) fallbackCategory = 'Entertainment';
+    else if (descLower.match(/medicine|health|doctor|pharmacy|hospital|dentist|gym|yoga|clinic|test|lab|physiotherapy|mental health/)) fallbackCategory = 'Health';
+    else if (descLower.match(/bill|electricity|water|recharge|phone|broadband|internet|rent|maintenance|dth|insurance|emi|loan/)) fallbackCategory = 'Bills';
+    else if (descLower.match(/shopping|clothes|amazon|flipkart|shoes|dress|tshirt|laptop|appliance|furniture|handbag|jeans|decor|kitchenware/)) fallbackCategory = 'Shopping';
+    else if (descLower.match(/tuition|school|college|course|udemy|coursera|education|book|textbook|notebook|stationery|exam|pen|pencil|printing/)) fallbackCategory = 'Education';
+    else if (descLower.match(/flight|travel|hotel|trip|holiday|stay|visa|airport|resort|airbnb/)) fallbackCategory = 'Travel';
 
     try {
       const mlUrl = process.env.NEXT_PUBLIC_ML_API_URL || 'http://127.0.0.1:8000';
       const response = await axios.post(`${mlUrl}/predict`, { description });
-      setCategory(response.data.category);
+      const predictedCategory = response.data.category;
+      
+      // If AI returns 'Others' but our keyword check found a match, use the keyword match
+      if (predictedCategory === 'Others' && fallbackCategory !== 'Others') {
+        setCategory(fallbackCategory);
+      } else {
+        setCategory(predictedCategory);
+      }
     } catch {
       setCategory(fallbackCategory);
     } finally {
